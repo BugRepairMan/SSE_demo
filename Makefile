@@ -1,5 +1,5 @@
 CC = g++
-FLAGS = -std=c++11 -mavx2 -O2
+FLAGS = -std=c++11 -mavx2 -O2 -fopenmp
 
 all: test
 
