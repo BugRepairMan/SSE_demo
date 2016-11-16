@@ -2,9 +2,10 @@
 #include <cstdint>
 #include <chrono>
 #include <x86intrin.h>
-#include <omp.h>
 
 using namespace std;
+
+#define OPENCL 1
 
 namespace Normal {
 	class LCG {
@@ -160,6 +161,10 @@ namespace AVX2 {
 	}
 }
 
+#ifdef _SSE_OPENMP_
+
+#include <omp.h>
+
 namespace SSE_OpenMP{
 	static const __m128i cLCG1 = _mm_set1_epi32(214013);
 	static const __m128i cLCG2 = _mm_set1_epi32(2531011);
@@ -221,6 +226,9 @@ namespace SSE_OpenMP{
 		return inside_count;
 	}
 }
+#endif
+
+#include "cl_func.cpp"
 
 int main()
 {
@@ -259,7 +267,7 @@ int main()
 	cout << "AVX2: Time =  " << elapse.count() << " s\n";
 
 	cout << inside_count / double(simulate_total) * 2 << "\n\n";
-
+#ifdef _SSE_OPENMP_
 	// 4. SSE_OpenMP test:
 	start = chrono::system_clock::now();
 	
@@ -270,6 +278,20 @@ int main()
 	cout << "SSE_OpenMP: Time =  " << elapse.count() << " s\n";
 
 	cout << inside_count / double(simulate_total) * 2 << "\n\n";
+#endif
+
+#ifdef OPENCL
+	// 5. OpenCL test:
+	start = chrono::system_clock::now();
+	
+	inside_count = OpenCL::test(simulate_total);
+	
+	end = chrono::system_clock::now();
+	elapse =chrono::duration_cast<chrono::duration<double>> (end - start);
+	cout << "OpenCL: Time =  " << elapse.count() << " s\n";
+
+	cout << inside_count / double(simulate_total) * 2 << "\n\n";
+#endif
 
 	return 0;
 }
